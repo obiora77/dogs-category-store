@@ -2,47 +2,36 @@
 
 import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
-import { HeroSection } from "@/components/hero-section"
-import { CategorySection } from "@/components/category-section"
-import { ShoppingCart } from "@/components/shopping-cart"
 import { ProductCard } from "@/components/product-card"
-import { CTASection } from "@/components/cta-section"
-import { TestimonialsSection } from "@/components/testimonials"
+import { ShoppingCart } from "@/components/shopping-cart"
 import { Footer } from "@/components/footer"
 import { useToast } from "@/hooks/use-toast"
 import { useCart } from "@/lib/cart-context"
 import { DogBreed } from "@/lib/types"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { ChevronLeft } from "lucide-react"
 
-export default function DogsPage() {
+function CategoryPageContent({ categoryName, categoryFilter, description }: any) {
   const [dogs, setDogs] = useState<DogBreed[]>([])
   const [filteredDogs, setFilteredDogs] = useState<DogBreed[]>([])
   const [loading, setLoading] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
-  const [activeCategory, setActiveCategory] = useState("")
   const { toast } = useToast()
   const { cartItems, addToCart, updateQuantity, removeFromCart, cartItemCount } = useCart()
 
-  const fetchDogs = async (name?: string) => {
+  const fetchDogs = async () => {
     setLoading(true)
     try {
-      const url = name ? `/api/dogs?name=${encodeURIComponent(name)}` : "/api/dogs"
-      const response = await fetch(url)
+      const response = await fetch("/api/dogs")
       const data = await response.json()
-
       if (Array.isArray(data)) {
         setDogs(data)
-        setFilteredDogs(data)
       } else {
         setDogs([])
-        setFilteredDogs([])
       }
     } catch (error) {
       console.error("Error fetching dogs:", error)
       setDogs([])
-      setFilteredDogs([])
     } finally {
       setLoading(false)
     }
@@ -52,18 +41,15 @@ export default function DogsPage() {
     fetchDogs()
   }, [])
 
-  const handleCategoryClick = (filter: string) => {
-    setActiveCategory(filter)
-    if (!filter) {
-      setFilteredDogs(dogs)
-      return
-    }
+  useEffect(() => {
+    filterDogsByCategory()
+  }, [dogs])
 
+  const filterDogsByCategory = () => {
     const filtered = dogs.filter((dog) => {
       const avgWeight = (dog.max_weight_male + dog.max_weight_female) / 2
-      const avgHeight = (dog.max_height_male + dog.max_height_female) / 2
 
-      switch (filter) {
+      switch (categoryFilter) {
         case "small":
           return avgWeight < 25
         case "medium":
@@ -79,15 +65,6 @@ export default function DogsPage() {
       }
     })
     setFilteredDogs(filtered)
-  }
-
-  const handleSearch = (term: string) => {
-    if (!term) {
-      fetchDogs()
-    } else {
-      fetchDogs(term)
-    }
-    setActiveCategory("")
   }
 
   const calculatePrice = (dog: DogBreed) => {
@@ -130,55 +107,44 @@ export default function DogsPage() {
     <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
       <Navbar cartItemCount={cartItemCount} onCartClick={() => setIsCartOpen(true)} />
 
-      <HeroSection onSearch={handleSearch} />
-
-      <CategorySection onCategoryClick={handleCategoryClick} activeCategory={activeCategory} />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Link href="/" className="inline-flex items-center text-primary hover:underline mb-8">
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Back to Home
+        </Link>
+
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold text-foreground mb-4">{categoryName}</h1>
+          <p className="text-muted-foreground text-lg mb-4">{description}</p>
+          <p className="text-muted-foreground text-lg">
+            {filteredDogs.length} {filteredDogs.length === 1 ? "breed" : "breeds"} available
+          </p>
+        </div>
+
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-primary"></div>
             <p className="mt-6 text-lg text-muted-foreground">Loading dog breeds...</p>
           </div>
         ) : (
-          <>
-            <div className="mb-8 flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-foreground">Available Breeds</h2>
-                <p className="text-muted-foreground mt-2 text-lg">
-                  Showing 8 featured breeds from our collection
-                </p>
-              </div>
-              <Link href="/products">
-                <Button variant="outline" className="gap-2">
-                  View All Products
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredDogs.slice(0, 8).map((dog) => (
-                <ProductCard
-                  key={dog.name}
-                  dog={dog}
-                  onAddToCart={handleAddToCart}
-                />
-              ))}
-            </div>
-          </>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+            {filteredDogs.map((dog) => (
+              <ProductCard
+                key={dog.name}
+                dog={dog}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
+          </div>
         )}
 
         {!loading && filteredDogs.length === 0 && (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🔍</div>
-            <p className="text-muted-foreground text-xl">No dog breeds found. Try a different search or category.</p>
+            <p className="text-muted-foreground text-xl">No dog breeds found in this category.</p>
           </div>
         )}
       </div>
-
-      <CTASection />
-
-      <TestimonialsSection />
 
       <Footer />
 
@@ -190,5 +156,15 @@ export default function DogsPage() {
         onRemove={handleRemoveFromCart}
       />
     </div>
+  )
+}
+
+export default function MediumDogsPage() {
+  return (
+    <CategoryPageContent
+      categoryName="Medium Dogs"
+      categoryFilter="medium"
+      description="Balanced size and energy. Discover medium dog breeds perfect for various lifestyles."
+    />
   )
 }

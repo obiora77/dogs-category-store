@@ -261,6 +261,10 @@ export default function ProductDetailPage() {
                     <span className="font-medium text-yellow-500">{"★".repeat(dog.good_with_other_dogs)}</span>
                   </div>
                   <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Good with strangers:</span>
+                    <span className="font-medium text-yellow-500">{"★".repeat(dog.good_with_strangers)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Energy level:</span>
                     <span className="font-medium text-yellow-500">{"★".repeat(dog.energy)}</span>
                   </div>
@@ -275,6 +279,10 @@ export default function ProductDetailPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Barking:</span>
                     <span className="font-medium text-yellow-500">{"★".repeat(dog.barking)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Protectiveness:</span>
+                    <span className="font-medium text-yellow-500">{"★".repeat(dog.protectiveness)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Shedding:</span>

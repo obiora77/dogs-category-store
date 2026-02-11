@@ -20,7 +20,11 @@ export function Navbar({ cartItemCount, onCartClick }: NavbarProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="text-2xl">🐕</div>
+            <img 
+              src="/paw-heart.png" 
+              alt="paw heart" 
+              style={{width:'50px', height:'auto'}}
+            />
             <span className="text-xl font-bold text-foreground">PawShop</span>
           </Link>
 

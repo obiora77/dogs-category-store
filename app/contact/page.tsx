@@ -10,11 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ShoppingCart } from "@/components/shopping-cart"
+import { FAQSection } from "@/components/faq-section"
+import { Footer } from "@/components/footer"
 import { Mail, MapPin, Phone } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useCart } from "@/lib/cart-context"
 
 export default function ContactPage() {
-  const [cart, setCart] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -23,8 +25,7 @@ export default function ContactPage() {
     message: "",
   })
   const { toast } = useToast()
-
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const { cartItems, updateQuantity, removeFromCart, cartItemCount } = useCart()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +41,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-blue-50 to-white">
       <Navbar cartItemCount={cartItemCount} onCartClick={() => setIsCartOpen(true)} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -166,7 +167,11 @@ export default function ContactPage() {
         </div>
       </main>
 
-      <ShoppingCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cart={cart} setCart={setCart} />
+      <FAQSection limit={4} showViewAll={true} />
+
+      <Footer />
+
+      <ShoppingCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cartItems} onUpdateQuantity={updateQuantity} onRemove={removeFromCart} />
     </div>
   )
 }

@@ -5,21 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-
-interface Dog {
-  name: string
-  image_link: string
-  energy: number
-  good_with_children: number
-  good_with_other_dogs: number
-  trainability: number
-  min_life_expectancy: number
-  max_life_expectancy: number
-}
+import { DogBreed } from "@/lib/types"
 
 interface ProductCardProps {
-  dog: Dog
-  onAddToCart: (dog: Dog) => void
+  dog: DogBreed
+  onAddToCart: (dog: DogBreed) => void
 }
 
 export function ProductCard({ dog, onAddToCart }: ProductCardProps) {
@@ -46,7 +36,7 @@ export function ProductCard({ dog, onAddToCart }: ProductCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
       <Link href={`/product/${slug}`} className="block">
-        <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+        <div className="aspect-4/3 bg-muted relative overflow-hidden">
           {image ? (
             <img
               src={image || "/placeholder.svg"}
@@ -54,7 +44,7 @@ export function ProductCard({ dog, onAddToCart }: ProductCardProps) {
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-cyan-100">
+            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-blue-100 to-cyan-100">
               <span className="text-6xl">🐕</span>
             </div>
           )}

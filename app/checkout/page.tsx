@@ -13,19 +13,12 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
-
-interface CartItem {
-  id: string
-  name: string
-  image: string
-  price: number
-  quantity: number
-}
+import { useCart } from "@/lib/cart-context"
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const { cartItems } = useCart()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     firstName: "",
@@ -40,18 +33,6 @@ export default function CheckoutPage() {
     cardNumber: "",
     expiryDate: "",
     cvv: "",
-  })
-
-  // Load cart from localStorage on mount
-  useState(() => {
-    const savedCart = localStorage.getItem("dogCart")
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart))
-      } catch (error) {
-        console.error("Error loading cart:", error)
-      }
-    }
   })
 
   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -140,8 +121,7 @@ export default function CheckoutPage() {
       })
 
       // Clear cart and redirect
-      localStorage.removeItem("dogCart")
-      setCartItems([])
+      localStorage.removeItem("cartItems")
       setTimeout(() => {
         router.push("/")
       }, 2000)
@@ -157,7 +137,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
       <Navbar cartItemCount={0} onCartClick={() => {}} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
