@@ -5,7 +5,8 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
-import { ShoppingCart, type CartItem } from "@/components/shopping-cart"
+import { ShoppingCart } from "@/components/shopping-cart"
+import { useCart } from "@/lib/cart-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -53,11 +54,12 @@ export default function ProductDetailPage() {
   const { toast } = useToast()
   const [dog, setDog] = useState<DogBreed | null>(null)
   const [loading, setLoading] = useState(true)
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [reviews, setReviews] = useState<Review[]>([])
   const [newReview, setNewReview] = useState({ author: "", rating: 5, comment: "" })
   const [userRating, setUserRating] = useState(5)
+
+  const { cartItems, addToCart, updateQuantity, removeFromCart, cartItemCount } = useCart()
 
   const slug = params.slug as string
   const breedName = slug.replace(/-/g, " ")
@@ -84,23 +86,41 @@ export default function ProductDetailPage() {
 
     fetchDog()
 
-    // Load mock reviews
-    setReviews([
-      {
-        id: "1",
-        author: "Sarah Johnson",
-        rating: 5,
-        comment: "Amazing breed! Very friendly and great with kids.",
-        date: "2024-01-15",
-      },
-      {
-        id: "2",
-        author: "Mike Thompson",
-        rating: 4,
-        comment: "Highly energetic but wonderful companion. Requires lots of exercise.",
-        date: "2024-01-10",
-      },
-    ])
+    // Load mock reviews placeholder only if none saved for this breed
+    const key = `reviews_${breedName}`
+    const saved = localStorage.getItem(key)
+    if (saved) {
+      try {
+        setReviews(JSON.parse(saved))
+      } catch (err) {
+        console.error("Failed to parse saved reviews", err)
+        setReviews([])
+      }
+    } else {
+      setReviews([
+        {
+          id: "1",
+          author: "Sarah Johnson",
+          rating: 5,
+          comment: "Amazing breed! Very friendly and great with kids.",
+          date: "2024-01-15",
+        },
+        {
+          id: "2",
+          author: "Mike Thompson",
+          rating: 4,
+          comment: "Highly energetic but wonderful companion. Requires lots of exercise.",
+          date: "2024-01-10",
+        },
+        {
+          id: "3",
+          author: "Emily Carter",
+          rating: 5,
+          comment: "Perfect family dog — calm, loving, and patient with children.",
+          date: "2024-02-01",
+        },
+      ])
+    }
   }, [breedName])
 
   const calculatePrice = (dog: DogBreed) => {
@@ -113,24 +133,14 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!dog) return
-
     const price = calculatePrice(dog)
-    const existingItem = cartItems.find((item) => item.id === dog.name)
-
-    if (existingItem) {
-      setCartItems(cartItems.map((item) => (item.id === dog.name ? { ...item, quantity: item.quantity + 1 } : item)))
-    } else {
-      setCartItems([
-        ...cartItems,
-        {
-          id: dog.name,
-          name: dog.name,
-          image: dog.image_link || "/placeholder.svg",
-          price,
-          quantity: 1,
-        },
-      ])
-    }
+    addToCart({
+      id: dog.name,
+      name: dog.name,
+      image: dog.image_link || "/placeholder.svg",
+      price,
+      quantity: 1,
+    })
 
     toast({
       title: "Added to cart!",
@@ -167,9 +177,17 @@ export default function ProductDetailPage() {
     })
   }
 
-  const averageRating = reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 0
+  // Persist reviews for this breed
+  useEffect(() => {
+    try {
+      const key = `reviews_${breedName}`
+      localStorage.setItem(key, JSON.stringify(reviews))
+    } catch (err) {
+      console.error("Failed to save reviews", err)
+    }
+  }, [reviews, breedName])
 
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+  const averageRating = reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 0
 
   if (loading) {
     return (
@@ -440,14 +458,8 @@ export default function ProductDetailPage() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
-        onUpdateQuantity={(id, quantity) => {
-          if (quantity === 0) {
-            setCartItems(cartItems.filter((item) => item.id !== id))
-          } else {
-            setCartItems(cartItems.map((item) => (item.id === id ? { ...item, quantity } : item)))
-          }
-        }}
-        onRemove={(id) => setCartItems(cartItems.filter((item) => item.id !== id))}
+        onUpdateQuantity={(id, quantity) => updateQuantity(id, quantity)}
+        onRemove={(id) => removeFromCart(id)}
       />
     </div>
   )
